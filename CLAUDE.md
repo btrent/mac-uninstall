@@ -17,6 +17,7 @@ macOS application uninstaller written in Swift. Offers both CLI and SwiftUI GUI 
   - `Models.swift` -- FoundItem, ActionTaken, ScanResult types
   - `TCCCleaner.swift` -- SQLite3-based TCC database cleanup
   - `LaunchServicesCleaner.swift` -- launchctl and lsregister wrappers
+  - `ProcessTerminator.swift` -- Process discovery and termination (NSWorkspace + pgrep/ps)
 - `Sources/mac-uninstall/CLI/CLIMode.swift` -- Terminal interface
 - `Sources/mac-uninstall/GUI/GUIApp.swift` -- SwiftUI interface
 - `Sources/mac-uninstall/main.swift` -- Entry point routing
@@ -29,6 +30,9 @@ macOS application uninstaller written in Swift. Offers both CLI and SwiftUI GUI 
 - TCC database is modified directly via SQLite3 (not tccutil) for per-app precision
 - Scan results are deduplicated by path to prevent double-deletion
 - GUI uses NSApplication programmatically (no @main) since main.swift handles routing
+- Running processes are terminated BEFORE any file deletion (Step 0 in uninstall)
+- Process termination uses graceful shutdown first (SIGTERM/terminate), then force kill (SIGKILL) after 3 seconds
+- Skips terminating the uninstaller's own process
 
 ## Conventions
 - All search locations are defined in SearchLocations.swift -- add new locations there

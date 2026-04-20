@@ -4,6 +4,13 @@ Complete macOS application uninstaller -- removes app bundles, caches, preferenc
 
 ## Features
 
+- **Dual interface** -- CLI and SwiftUI GUI modes
+- **Automatic process termination** -- kills running application processes before uninstall
+- **Comprehensive scanning** -- searches 25+ system locations for app artifacts
+- **TCC database cleanup** -- removes accessibility, camera, microphone, and other privacy permissions
+- **Launch Services cleanup** -- unregisters app from macOS launch database
+- **No external dependencies** -- uses only Foundation, SwiftUI, AppKit, and system SQLite3
+
 mac-uninstall scans and removes files from 25+ location categories that macOS applications scatter across the system:
 
 - **Application bundles** (`.app`)
@@ -69,10 +76,11 @@ sudo .build/release/mac-uninstall
 ## How it works
 
 1. **Reads the app's Info.plist** to extract `CFBundleIdentifier`, display name, and vendor.
-2. **Scans 25+ known macOS locations** for files matching the bundle ID, app name, and vendor.
-3. **Displays a categorized list** of everything found, with file sizes.
-4. **On confirmation:** unloads launch agents/daemons, removes TCC entries, deletes all discovered files, and unregisters the app from Launch Services.
-5. **Reports every action taken** with pass/fail status.
+2. **Terminates running processes** associated with the application.
+3. **Scans 25+ known macOS locations** for files matching the bundle ID, app name, and vendor.
+4. **Displays a categorized list** of everything found, with file sizes.
+5. **On confirmation:** unloads launch agents/daemons, removes TCC entries, deletes all discovered files, and unregisters the app from Launch Services.
+6. **Reports every action taken** with pass/fail status.
 
 ## Requirements
 
