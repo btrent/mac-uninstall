@@ -29,6 +29,7 @@ struct SearchLocations {
         items.append(contentsOf: scanSystemLaunchDaemons())
         items.append(contentsOf: scanSystemPreferences())
         items.append(contentsOf: scanSystemCaches())
+        items.append(contentsOf: scanSystemVendorDirectories())
         items.append(contentsOf: scanInternetPlugins())
         items.append(contentsOf: scanPrivilegedHelperTools())
         items.append(contentsOf: scanDotfiles())
@@ -170,6 +171,55 @@ struct SearchLocations {
 
     private func scanSystemCaches() -> [FoundItem] {
         findMatching(in: "/Library/Caches", category: .systemCaches)
+    }
+
+    private func scanSystemVendorDirectories() -> [FoundItem] {
+        let base = "/Library"
+        guard fm.fileExists(atPath: base),
+              let contents = try? fm.contentsOfDirectory(atPath: base) else { return [] }
+
+        var patterns: [String] = []
+
+        // Add app name patterns (e.g., "Backblaze", "Backblaze.*")
+        for name in bundleInfo.searchNames {
+            let capitalized = name.prefix(1).uppercased() + name.dropFirst()
+            patterns.append(name)
+            patterns.append(capitalized)
+        }
+
+        // Add vendor name pattern (e.g., "Backblaze" from "com.backblaze.bzbmenu")
+        if let vendor = extractVendorName() {
+            patterns.append(vendor)
+            patterns.append(vendor.lowercased())
+        }
+
+        // Add bundle ID prefix patterns (e.g., "com.backblaze")
+        if let prefix = bundleInfo.vendorPrefix {
+            patterns.append(prefix)
+        }
+
+        var items: [FoundItem] = []
+        for entry in contents {
+            let entryLower = entry.lowercased()
+            let entryBase = entry.components(separatedBy: ".").first?.lowercased() ?? entryLower
+
+            for pattern in patterns {
+                let patternLower = pattern.lowercased()
+                // Match exact name, name.* patterns, or contains pattern
+                if entryLower == patternLower ||
+                   entryBase == patternLower ||
+                   entryLower.hasPrefix(patternLower + ".") {
+                    let fullPath = "\(base)/\(entry)"
+                    var isDir: ObjCBool = false
+                    if fm.fileExists(atPath: fullPath, isDirectory: &isDir), isDir.boolValue {
+                        items.append(makeItem(path: fullPath, category: .systemVendorFiles))
+                    }
+                    break
+                }
+            }
+        }
+
+        return items
     }
 
     private func scanInternetPlugins() -> [FoundItem] {

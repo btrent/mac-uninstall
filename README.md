@@ -28,6 +28,7 @@ mac-uninstall scans and removes files from 25+ location categories that macOS ap
 - **iCloud Documents sync data** (`~/Library/Mobile Documents/`)
 - **Internet Plug-Ins** (`~/Library/Internet Plug-Ins/`, `/Library/Internet Plug-Ins/`)
 - **Privileged Helper Tools** (`/Library/PrivilegedHelperTools/`)
+- **System-level vendor directories** (`/Library/<Vendor>/`) -- directories like `/Library/Dropbox/`, `/Library/Adobe/`, `/Library/Backblaze.bzpkg/`
 - **TCC privacy permission entries** -- Screen Recording, Camera, Microphone, Accessibility, Full Disk Access, and more
 - **Configuration dotfiles** (`~/.appname`, `~/.config/appname`)
 - **System-level Application Support, Preferences, and Caches** (`/Library/`)

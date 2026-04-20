@@ -24,6 +24,7 @@ enum FileCategory: String, CaseIterable, CustomStringConvertible {
     case systemPreferences = "System Preferences"
     case systemCaches = "System Caches"
     case systemApplicationSupport = "System Application Support"
+    case systemVendorFiles = "System Vendor Files"
 
     var description: String { rawValue }
 }

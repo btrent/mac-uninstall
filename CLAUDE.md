@@ -13,7 +13,7 @@ macOS application uninstaller written in Swift. Offers both CLI and SwiftUI GUI 
 - `Sources/mac-uninstall/Core/` -- Shared engine used by both CLI and GUI
   - `AppUninstaller.swift` -- Main orchestrator (ObservableObject)
   - `BundleInfo.swift` -- Info.plist parser
-  - `SearchLocations.swift` -- All 25+ scan locations
+  - `SearchLocations.swift` -- All 25+ scan locations, includes system vendor directory scanning (`/Library/<Vendor>/`)
   - `Models.swift` -- FoundItem, ActionTaken, ScanResult types
   - `TCCCleaner.swift` -- SQLite3-based TCC database cleanup
   - `LaunchServicesCleaner.swift` -- launchctl and lsregister wrappers
@@ -33,6 +33,7 @@ macOS application uninstaller written in Swift. Offers both CLI and SwiftUI GUI 
 - Running processes are terminated BEFORE any file deletion (Step 0 in uninstall)
 - Process termination uses graceful shutdown first (SIGTERM/terminate), then force kill (SIGKILL) after 3 seconds
 - Skips terminating the uninstaller's own process
+- System-level vendor directories (`/Library/<Vendor>/`) are scanned using app name, vendor name (from bundle ID), and bundle prefix patterns to catch directories like `/Library/Dropbox/` or `/Library/Adobe/`
 
 ## Conventions
 - All search locations are defined in SearchLocations.swift -- add new locations there
