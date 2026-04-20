@@ -31,6 +31,16 @@ struct CLIMode {
             return 0
         }
 
+        // Display running processes warning
+        if !scanResult.runningProcesses.isEmpty {
+            printWarning("Running Processes Detected (will be terminated):")
+            for proc in scanResult.runningProcesses {
+                let pathStr = proc.path ?? "unknown path"
+                print("   \u{2022} \(proc.name) (PID \(proc.pid)) - \(pathStr)")
+            }
+            print("")
+        }
+
         // Display results
         printHeader("Found \(scanResult.foundItems.count) items (\(scanResult.formattedTotalSize))")
         print("")
@@ -65,10 +75,18 @@ struct CLIMode {
         print("")
 
         uninstaller.onAction = { action in
-            if action.isFailure {
-                printError("  \(action)")
-            } else {
-                printSuccess("  \(action)")
+            switch action {
+            case .terminatedProcess(let pid, let name, let graceful):
+                let method = graceful ? "gracefully" : "forcefully"
+                printSuccess("  \u{2713} Terminated process \(method): \(name) (PID \(pid))")
+            case .terminatedProcessFailed(let pid, let name, let error):
+                printError("  \u{2717} FAILED to terminate process: \(name) (PID \(pid)) - \(error)")
+            default:
+                if action.isFailure {
+                    printError("  \(action)")
+                } else {
+                    printSuccess("  \(action)")
+                }
             }
         }
 

@@ -30,7 +30,14 @@ class AppUninstaller {
         self.bundleInfo = info
         let locations = SearchLocations(bundleInfo: info, appPath: appPath)
         let items = locations.scanAll()
-        let result = ScanResult(appPath: appPath, bundleInfo: info, foundItems: items)
+
+        // Discover running processes
+        let matchedProcesses = ProcessTerminator.findProcesses(bundleInfo: info, appPath: appPath)
+        let runningProcesses = matchedProcesses.map { proc in
+            RunningProcess(pid: proc.pid, name: proc.name, path: proc.path, bundleIdentifier: proc.bundleIdentifier)
+        }
+
+        let result = ScanResult(appPath: appPath, bundleInfo: info, foundItems: items, runningProcesses: runningProcesses)
         self.scanResult = result
         return result
     }
@@ -39,6 +46,22 @@ class AppUninstaller {
         guard let info = bundleInfo else { return [] }
         actions = []
         let fm = FileManager.default
+
+        // Step 0: Terminate running processes FIRST
+        let processes = ProcessTerminator.findProcesses(bundleInfo: info, appPath: appPath)
+        if !processes.isEmpty {
+            let results = ProcessTerminator.terminate(processes: processes)
+            for result in results {
+                switch result {
+                case .terminated(let pid, let name, let graceful):
+                    record(.terminatedProcess(pid: pid, name: name, graceful: graceful))
+                case .failed(let pid, let name, let error):
+                    record(.terminatedProcessFailed(pid: pid, name: name, error: error))
+                case .skipped:
+                    break
+                }
+            }
+        }
 
         // Step 1: Unload launch agents and daemons FIRST
         let launchItems = items.filter { $0.category == .launchAgent || $0.category == .launchDaemon }

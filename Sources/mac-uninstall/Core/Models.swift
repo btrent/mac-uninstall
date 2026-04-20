@@ -53,6 +53,8 @@ enum ActionTaken: CustomStringConvertible {
     case removedDirectory(path: String, category: FileCategory, sizeBytes: UInt64?)
     case cleanedTCCEntry(bundleID: String, service: String)
     case unregisteredFromLaunchServices(path: String)
+    case terminatedProcess(pid: Int32, name: String, graceful: Bool)
+    case terminatedProcessFailed(pid: Int32, name: String, error: String)
     case failed(path: String, error: String)
 
     var description: String {
@@ -65,14 +67,32 @@ enum ActionTaken: CustomStringConvertible {
             return "Removed \(cat): \(path)" + (sizeStr.isEmpty ? "" : " (\(sizeStr))")
         case .cleanedTCCEntry(let bid, let svc): return "Removed TCC permission: \(svc) for \(bid)"
         case .unregisteredFromLaunchServices(let path): return "Unregistered from Launch Services: \(path)"
+        case .terminatedProcess(let pid, let name, let graceful):
+            let method = graceful ? "gracefully" : "forcefully"
+            return "Terminated process \(method): \(name) (PID \(pid))"
+        case .terminatedProcessFailed(let pid, let name, let error):
+            return "FAILED to terminate process: \(name) (PID \(pid)) — \(error)"
         case .failed(let path, let error): return "FAILED: \(path) — \(error)"
         }
     }
 
     var isFailure: Bool {
-        if case .failed = self { return true }
-        return false
+        switch self {
+        case .failed, .terminatedProcessFailed:
+            return true
+        default:
+            return false
+        }
     }
+}
+
+/// A running process associated with the application
+struct RunningProcess: Identifiable {
+    let id = UUID()
+    let pid: Int32
+    let name: String
+    let path: String?
+    let bundleIdentifier: String?
 }
 
 /// Overall scan result
@@ -80,6 +100,7 @@ struct ScanResult {
     let appPath: String
     let bundleInfo: BundleInfo
     let foundItems: [FoundItem]
+    let runningProcesses: [RunningProcess]
 
     var totalSize: UInt64 {
         foundItems.compactMap(\.sizeBytes).reduce(0, +)
